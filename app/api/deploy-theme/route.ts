@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: any) {
   const vercelToken = process.env.NEXT_PUBLIC_VERCEL_TOKEN;
+  console.log("Vercel Token:", vercelToken);  // Log the token to check if it's available
+
   const { username, template } = await req.json(); // Get the template and username from the request
 
   let repoName;
@@ -40,15 +42,15 @@ export async function POST(req: any) {
     const response = await fetch(`https://api.vercel.com/v13/deployments`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${vercelToken}`,
+        Authorization: `Bearer ${vercelToken}`, // Ensure proper token is passed
         "Content-Type": "application/json",
       },
       body: JSON.stringify(deploymentPayload),
-      
     });
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.log("Deployment Error:", errorData); // Log the API error
       return NextResponse.json({ error: errorData }, { status: response.status });
     }
 
@@ -56,6 +58,7 @@ export async function POST(req: any) {
     console.log("Alias:", deploymentData.alias[0]);
     return NextResponse.json({ url: deploymentData.url }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.log("Internal Server Error:", error); // Log internal server error
+    return NextResponse.json({ error: "Internasl Server Error" }, { status: 500 });
   }
 }
