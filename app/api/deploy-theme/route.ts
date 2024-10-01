@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(req: Request) {
   const vercelToken = process.env.NEXT_PUBLIC_VERCEL_TOKEN;
+  
+  // Extract the username from the request body
+  const { username } = await req.json();
+  
+  // Generate a unique deployment name using the username and timestamp
+  const uniqueDeploymentName = `${username}-${Date.now()}`;
 
   const deploymentPayload = {
-    name: "webtemplify-deployment",
+    name: uniqueDeploymentName,  // Use the unique name for deployment
     gitSource: {
       type: "github",
-      repo: "Joshevskicode/web_templify",
+      repo: "Joshevskicode/web_templify",  // Your GitHub repository
       ref: "main",
-      repoId: 865908307,  // This is your repoId
+      repoId: 865908307,  // Your repoId
     },
     target: "production",
     projectSettings: {

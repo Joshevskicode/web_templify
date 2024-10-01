@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { useSession, signIn } from "next-auth/react";
 import { useState } from "react";
 
@@ -12,13 +12,20 @@ export default function Home() {
     try {
       const response = await fetch("/api/deploy-theme", {
         method: "POST",
+        body: JSON.stringify({
+          username: session?.user?.name || "anonymous",  // Pass the user's name or a fallback
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setDeployedUrl(data.url); // Set the deployed theme URL
-        alert(`Your theme has been deployed at ${data.url}`);
+        const deploymentUrl = `https://${data.url}`;  // Use the full Vercel URL
+        setDeployedUrl(deploymentUrl);  // Set the deployed theme URL
+        alert(`Your theme has been deployed at ${deploymentUrl}`);
       } else {
         alert("Failed to deploy the theme");
       }
@@ -55,6 +62,8 @@ export default function Home() {
 
       {session && (
         <div>
+          {loading && <p>Deployment in progress... This usually takes about 1-2 minutes.</p>}
+
           {deployedUrl ? (
             <p>
               Theme deployed at:{" "}
