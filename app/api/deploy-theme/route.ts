@@ -1,21 +1,29 @@
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req:any) {
   const vercelToken = process.env.NEXT_PUBLIC_VERCEL_TOKEN;
-  
-  // Extract the username from the request body
-  const { username } = await req.json();
-  
-  // Generate a unique deployment name using the username and timestamp
-  const uniqueDeploymentName = `${username}-${Date.now()}`;
+  const { username, template } = await req.json(); // Get the template from the request
+
+  let repoName;
+  let repoId;
+
+  if (template === "restaurant_template") {
+    // Use the restaurant template repo and ID
+    repoName = "Joshevskicode/restaurant_template";
+    repoId = 865978617; // This is your restaurant template repoId
+  } else {
+    // Default to sales page repo
+    repoName = "Joshevskicode/web_templify";
+    repoId = 865908307; // Existing web_templify repoId
+  }
 
   const deploymentPayload = {
-    name: uniqueDeploymentName,  // Use the unique name for deployment
+    name: `${template}-deployment-${username}`,
     gitSource: {
       type: "github",
-      repo: "Joshevskicode/web_templify",  // Your GitHub repository
+      repo: repoName,
       ref: "main",
-      repoId: 865908307,  // Your repoId
+      repoId: repoId, // Use the correct repoId
     },
     target: "production",
     projectSettings: {
@@ -37,7 +45,6 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("Error Data:", errorData);
       return NextResponse.json({ error: errorData }, { status: response.status });
     }
 
@@ -45,7 +52,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: deploymentData.url }, { status: 200 });
 
   } catch (error) {
-    console.error("Error while deploying:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
