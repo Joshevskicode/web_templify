@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-export async function POST(req:any) {
+export async function POST(req: any) {
   const vercelToken = process.env.NEXT_PUBLIC_VERCEL_TOKEN;
-  const { username, template } = await req.json(); // Get the template from the request
+  const { username, template } = await req.json(); // Get the template and username from the request
 
   let repoName;
   let repoId;
@@ -17,8 +17,11 @@ export async function POST(req:any) {
     repoId = 865908307; // Existing web_templify repoId
   }
 
+  // Generate a unique deployment name using username and a timestamp
+  const uniqueDeploymentName = `${template}-deployment-${username}-${Date.now()}`;
+
   const deploymentPayload = {
-    name: `${template}-deployment-${username}`,
+    name: uniqueDeploymentName, // Use the unique name for deployment
     gitSource: {
       type: "github",
       repo: repoName,
@@ -27,9 +30,9 @@ export async function POST(req:any) {
     },
     target: "production",
     projectSettings: {
-      buildCommand: "npm run build",  // Build command for Next.js
-      outputDirectory: ".next",  // The default Next.js build output directory
-      framework: "nextjs",  // Specify that the project is using Next.js
+      buildCommand: "npm run build", // Build command for Next.js
+      outputDirectory: ".next", // The default Next.js build output directory
+      framework: "nextjs", // Specify that the project is using Next.js
     },
   };
 
@@ -41,6 +44,7 @@ export async function POST(req:any) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(deploymentPayload),
+      
     });
 
     if (!response.ok) {
@@ -49,8 +53,8 @@ export async function POST(req:any) {
     }
 
     const deploymentData = await response.json();
+    console.log("Alias:", deploymentData.alias[0]);
     return NextResponse.json({ url: deploymentData.url }, { status: 200 });
-
   } catch (error) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

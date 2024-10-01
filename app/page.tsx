@@ -26,6 +26,21 @@ export default function Home() {
     }
   };
 
+  // Modify the URL function dynamically
+  function modifyUrl(url: string) {
+    // Find the index of the last occurrence of '-' and '.vercel'
+    const lastDashIndex = url.lastIndexOf('-');
+    const vercelIndex = url.lastIndexOf('.vercel');
+  
+    // If both are found, remove the characters between them
+    if (lastDashIndex !== -1 && vercelIndex !== -1) {
+      return url.slice(0, lastDashIndex) + url.slice(vercelIndex);
+    }
+  
+    // Return the original URL if no changes are needed
+    return url;
+  }
+
   // Polling function to check deployment status
   const pollDeploymentStatus = async (deploymentId: string, startTime: number) => {
     let readyState = "building";
@@ -47,7 +62,11 @@ export default function Home() {
 
       if (readyState === "READY") {
         setDeployStatus("done");
-        setDeployedUrl(`https://${data.url}`);
+
+        // Modify the deployment URL dynamically before setting it
+        const modifiedDeploymentUrl = modifyUrl(`https://${data.url}`);
+        setDeployedUrl(modifiedDeploymentUrl);
+
         stopTimer(); // Stop the timer when deployment is done
         setLoading(false); // Set loading to false
         break;
@@ -177,4 +196,3 @@ export default function Home() {
     </div>
   );
 }
-
