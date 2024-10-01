@@ -3,7 +3,7 @@ import { NextAuthOptions } from "next-auth";
 
 // Define the user object type expected by NextAuth
 interface User {
-  id: string;  // id as a string
+  id: string;
   name: string;
   email?: string;
 }
@@ -19,32 +19,34 @@ export const authOptions: NextAuthOptions = {
       authorize: async (credentials) => {
         if (!credentials) return null;
 
-        const user: User = { id: "1", name: credentials.username };  // Example static user
+        // Example user lookup (in real-world, verify from DB or external service)
+        const user: User = { id: "1", name: credentials.username };
         if (user) {
-          return user;  // Successful authentication
+          return user;
         }
-        return null;  // Authentication failed
+        return null;
       },
     }),
   ],
   pages: {
-    signIn: "/auth/signin",  // Custom sign-in page
+    signIn: "/auth/signin", // Custom sign-in page path
   },
   session: {
-    strategy: "jwt",  // Use JWT for session handling
+    strategy: "jwt", // Use JWT for session management
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;  // Add user id to token
+        token.id = user.id;
       }
       return token;
     },
     async session({ session, token }) {
       if (token?.id) {
-        session.id = token.id as string;  // Add user id to session
+        session.id = token.id as string;
       }
       return session;
     },
   },
+  secret: process.env.NEXTAUTH_SECRET, // Ensure the secret is set
 };
