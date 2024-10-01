@@ -1,95 +1,86 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+import { useSession, signIn } from "next-auth/react";
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const { data: session, status } = useSession();
+  const [loading, setLoading] = useState(false);
+  const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+  const handleBuyTheme = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/deploy-theme", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setDeployedUrl(data.url); // Set the deployed theme URL
+        alert(`Your theme has been deployed at ${data.url}`);
+      } else {
+        alert("Failed to deploy the theme");
+      }
+    } catch (error) {
+      alert("An error occurred during deployment.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+      <h1>Welcome to WebTemplify!</h1>
+      <p>Get started by purchasing a theme. After your purchase, the theme will be automatically deployed for free!</p>
+
+      {status === "loading" && <p>Loading...</p>}
+
+      {status === "unauthenticated" && (
+        <button
+          onClick={() => signIn()}
+          style={{
+            padding: '1rem 2rem',
+            backgroundColor: '#0070f3',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            borderRadius: '8px',
+            fontSize: '16px',
+          }}
+        >
+          Sign In to Buy Theme
+        </button>
+      )}
+
+      {session && (
+        <div>
+          {deployedUrl ? (
+            <p>
+              Theme deployed at:{" "}
+              <a href={deployedUrl} target="_blank" rel="noopener noreferrer">
+                {deployedUrl}
+              </a>
+            </p>
+          ) : (
+            <button
+              onClick={handleBuyTheme}
+              disabled={loading}
+              style={{
+                padding: '1rem 2rem',
+                backgroundColor: loading ? '#cccccc' : '#28a745',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: '8px',
+                fontSize: '16px',
+              }}
+            >
+              {loading ? 'Deploying Theme...' : 'Buy Theme'}
+            </button>
+          )}
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
     </div>
   );
 }
