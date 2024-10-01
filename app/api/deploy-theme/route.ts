@@ -25,7 +25,7 @@ export async function POST(req: any) {
     }
 
     if (!template || typeof template !== 'string') {
-      console.error("Invalid or missing 'templates'");
+      console.error("Invalid or missing 'template'");
       return NextResponse.json({ error: "Invalid or missing 'template'" }, { status: 400 });
     }
 
