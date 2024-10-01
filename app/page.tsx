@@ -87,11 +87,13 @@ export default function Home() {
     }
   };
 
+  // Enhanced logging on handleBuyRestaurantTheme
   const handleBuyRestaurantTheme = async () => {
     setLoading(true);
     const startTime = Date.now();
 
     try {
+      console.log("Sending request to deploy the theme...");
       const response = await fetch("/api/deploy-theme", {
         method: "POST",
         body: JSON.stringify({
@@ -104,15 +106,18 @@ export default function Home() {
       });
 
       const data = await response.json();
+      console.log("Deployment response:", data);
 
       if (response.ok) {
         const deploymentId = data.url.split("/").pop();
         await pollDeploymentStatus(deploymentId, startTime);
       } else {
+        console.error("Failed to deploy the restaurant theme:", data);
         alert("Failed to deploy the restaurant theme");
         setLoading(false);
       }
     } catch (error) {
+      console.error("An error occurred during deployment:", error);
       alert("An error occurred during deployment.");
       setLoading(false);
     }
@@ -194,5 +199,5 @@ export default function Home() {
         </div>
       )}
     </div>
-  );
+  ); 
 }

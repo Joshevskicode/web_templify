@@ -13,6 +13,12 @@ export async function POST(req: any) {
   const vercelToken = process.env.NEXT_PUBLIC_VERCEL_TOKEN;
   console.log("Vercel Token:", vercelToken); // Log the token to check if it's available
 
+  // If Vercel token is not set, return an error
+  if (!vercelToken) {
+    console.error("Missing Vercel token");
+    return NextResponse.json({ error: "Vercel Token is missing" }, { status: 500 });
+  }
+
   try {
     const { username, template } = await req.json(); // Get the template and username from the request
 
