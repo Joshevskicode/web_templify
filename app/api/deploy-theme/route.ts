@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: any) {
   const vercelToken = process.env.NEXT_PUBLIC_VERCEL_TOKEN;
-  console.log("Vercel Token:", vercelToken);  // Log the token to check if it's available
+  console.log("Vercel Token:", vercelToken); // Log the token to check if it's available
 
   const { username, template } = await req.json(); // Get the template and username from the request
 
@@ -56,9 +56,23 @@ export async function POST(req: any) {
 
     const deploymentData = await response.json();
     console.log("Alias:", deploymentData.alias[0]);
-    return NextResponse.json({ url: deploymentData.url }, { status: 200 });
+
+    // Adding CORS headers to the response
+    const responseWithCORS = NextResponse.json({ url: deploymentData.url }, { status: 200 });
+    responseWithCORS.headers.set('Access-Control-Allow-Origin', '*');
+    responseWithCORS.headers.set('Access-Control-Allow-Methods', 'POST');
+    responseWithCORS.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    return responseWithCORS;
   } catch (error) {
     console.log("Internal Server Error:", error); // Log internal server error
-    return NextResponse.json({ error: "Internasl Server Error" }, { status: 500 });
+    const errorResponse = NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+    // Add CORS headers to the error response as well
+    errorResponse.headers.set('Access-Control-Allow-Origin', '*');
+    errorResponse.headers.set('Access-Control-Allow-Methods', 'POST');
+    errorResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    return errorResponse;
   }
 }
