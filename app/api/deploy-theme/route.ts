@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
-// Handle OPTIONS requests for CORS preflight
-export async function OPTIONS(req: any) {
-  const response = NextResponse.json({}, { status: 200 });
-  response.headers.set('Access-Control-Allow-Origin', '*');
-  response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  return response;
+function sanitizeName(name: string) {
+  // Replace any invalid characters with a dash and remove forbidden sequences like '---'
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, '-') // Replace any character that's not a letter, digit, '.', '_', or '-'
+    .replace(/-{2,}/g, '-') // Replace multiple dashes with a single dash
+    .replace(/\.+/g, '.') // Replace multiple dots with a single dot
+    .replace(/^-|-$/g, '') // Remove leading or trailing dashes
+    .slice(0, 100); // Ensure the name is up to 100 characters long
 }
 
 export async function POST(req: any) {
@@ -40,11 +42,15 @@ export async function POST(req: any) {
       repoId = 865908307; // Existing web_templify repoId
     }
 
-    // Generate a unique deployment name using username and a timestamp
-    const uniqueDeploymentName = `${template}-deployment-${username}-${Date.now()}`;
+    // Sanitize username and template to generate a valid deployment name
+    const sanitizedUsername = sanitizeName(username);
+    const sanitizedTemplate = sanitizeName(template);
+
+    // Generate a unique deployment name using sanitized username and template
+    const uniqueDeploymentName = `${sanitizedTemplate}-deployment-${sanitizedUsername}-${Date.now()}`;
 
     const deploymentPayload = {
-      name: uniqueDeploymentName, // Use the unique name for deployment
+      name: uniqueDeploymentName, // Use the sanitized unique name for deployment
       gitSource: {
         type: "github",
         repo: repoName,
@@ -71,7 +77,7 @@ export async function POST(req: any) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("Deployment Error Details:", errorData); // Log the detailed error from Vercel
+      console.error("Deployment Error Details:", errorData); // Log the API error
       const errorResponse = NextResponse.json({ error: errorData }, { status: response.status });
 
       // Adding CORS headers to the error response
