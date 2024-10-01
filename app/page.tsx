@@ -91,7 +91,7 @@ export default function Home() {
   const handleBuyRestaurantTheme = async () => {
     setLoading(true);
     const startTime = Date.now();
-
+  
     try {
       console.log("Sending request to deploy the theme...");
       const response = await fetch("/api/deploy-theme", {
@@ -104,10 +104,10 @@ export default function Home() {
           "Content-Type": "application/json",
         },
       });
-
+  
       const data = await response.json();
       console.log("Deployment response:", data);
-
+  
       if (response.ok) {
         const deploymentId = data.url.split("/").pop();
         await pollDeploymentStatus(deploymentId, startTime);
@@ -122,6 +122,7 @@ export default function Home() {
       setLoading(false);
     }
   };
+  
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
