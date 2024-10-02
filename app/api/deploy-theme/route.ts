@@ -41,7 +41,7 @@ export async function POST(req: any) {
       },
       target: "production",
       projectSettings: {
-        buildCommand: `MONGODB_URI=${encodeURIComponent(mongoDbUri)} npm run build`, // Securely inject MongoDB URI
+        buildCommand: `MONGODB_URI=${mongoDbUri} npm run build`, // Removed encodeURIComponent
         outputDirectory: ".next",
         framework: "nextjs",
       },
