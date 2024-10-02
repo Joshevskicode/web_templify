@@ -29,23 +29,24 @@ export async function POST(req: any) {
     const mongoDbUri = process.env.NEXT_PUBLIC_MONGODB_URI || "your-fallback-mongodb-uri"; // Use the environment variable or a fallback URI
 
     const deploymentPayload = {
-      name: uniqueDeploymentName,
-      gitSource: {
-        type: "github",
-        repo: repoName,
-        ref: "main",
-        repoId: repoId,
-      },
-      target: "production",
-      projectSettings: {
-        buildCommand: "npm run build",
-        outputDirectory: ".next",
-        framework: "nextjs",
-      },
-      env: {
-        MONGODB_URI: mongoDbUri, // Inject MongoDB URI as an environment variable into the deployment
-      }
-    };
+        name: uniqueDeploymentName,
+        gitSource: {
+          type: "github",
+          repo: repoName,
+          ref: "main",
+          repoId: repoId,
+        },
+        target: "production",
+        projectSettings: {
+          buildCommand: "MONGODB_URI=mongodb+srv://admin:Forsafi4o.@cluster0.1oopa.mongodb.net/ npm run build", // Inject MongoDB URI into the build command
+          outputDirectory: ".next",
+          framework: "nextjs",
+        },
+        env: {
+          MONGODB_URI: mongoDbUri, // Set MongoDB URI for runtime
+        }
+      };
+      
 
     const response = await fetch(`https://api.vercel.com/v13/deployments`, {
       method: "POST",
