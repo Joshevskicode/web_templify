@@ -1,21 +1,23 @@
 'use client';
 import { useSession, signIn } from "next-auth/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // Import the router
 
 export default function Home() {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
-  const [deployStatus, setDeployStatus] = useState<string | null>(null); // Store deployment status
-  const [elapsedTime, setElapsedTime] = useState<number>(0); // Store the elapsed time
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null); // Timer
+  const [deployStatus, setDeployStatus] = useState<string | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const router = useRouter(); // Initialize router
 
-  // Function to start the timer
   const startTimer = () => {
     setElapsedTime(0);
     const interval = setInterval(() => {
       setElapsedTime((prev) => prev + 1);
-    }, 1000); // Increment the elapsed time every second
+    }, 1000);
     setTimerInterval(interval);
   };
 
@@ -26,18 +28,15 @@ export default function Home() {
     }
   };
 
-  // Modify the URL function dynamically
   function modifyUrl(url: string) {
     const lastDashIndex = url.lastIndexOf('-');
     const vercelIndex = url.lastIndexOf('.vercel');
-
     if (lastDashIndex !== -1 && vercelIndex !== -1) {
       return url.slice(0, lastDashIndex) + url.slice(vercelIndex);
     }
     return url;
   }
 
-  // Polling function to check deployment status
   const pollDeploymentStatus = async (deploymentId: string, startTime: number) => {
     let readyState = "building";
     setDeployStatus("building");
@@ -59,11 +58,10 @@ export default function Home() {
       if (readyState === "READY") {
         setDeployStatus("done");
 
-        // Modify the deployment URL dynamically before setting it
         const modifiedDeploymentUrl = modifyUrl(`https://${data.url}`);
         setDeployedUrl(modifiedDeploymentUrl);
 
-        stopTimer(); // Stop the timer when deployment is done
+        stopTimer();
         setLoading(false);
 
         return { status: "done", url: modifiedDeploymentUrl, deploymentId };
@@ -90,9 +88,8 @@ export default function Home() {
   const handleBuyRestaurantTheme = async () => {
     setLoading(true);
     const startTime = Date.now();
-  
+
     try {
-      console.log("Sending request to deploy the theme...");
       const response = await fetch("/api/deploy-theme", {
         method: "POST",
         body: JSON.stringify({
@@ -103,19 +100,15 @@ export default function Home() {
           "Content-Type": "application/json",
         },
       });
-  
+
       const data = await response.json();
-      console.log("Full Deployment Response:", data); // Log full response
-  
       if (response.ok) {
         const projectId = data?.project?.id;
-        const deploymentId = data.url.split("/").pop(); // Extract deploymentId from URL
-  
-        console.log("Project ID:", projectId); 
-        console.log("Deployment ID (from URL):", deploymentId);
-  
+        setProjectId(projectId);
+        const deploymentId = data.url.split("/").pop();
+
         const deploymentResult = await pollDeploymentStatus(deploymentId, startTime);
-  
+
         if (deploymentResult.status === "done" && deploymentResult.url && deploymentResult.deploymentId) {
           const userResponse = await fetch("/api/users", {
             method: "POST",
@@ -129,10 +122,13 @@ export default function Home() {
               url: deploymentResult.url,
             }),
           });
-  
+
           const userData = await userResponse.json();
           if (userResponse.ok) {
             console.log("User created successfully:", userData);
+
+            // Navigate to the dashboard after successful deployment
+            router.push(`/dashboard?projectId=${projectId}&url=${deploymentResult.url}`);
           } else {
             console.error("Failed to create user:", userData.error);
             alert("User creation failed. Please try again.");
@@ -149,9 +145,9 @@ export default function Home() {
       setLoading(false);
     }
   };
-  
+
   return (
-    <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
       <h1>Welcome to WebTemplify!</h1>
       <p>Select the restaurant theme to purchase. It will automatically be deployed for free!</p>
 
@@ -176,9 +172,8 @@ export default function Home() {
 
       {session && (
         <div>
-          {/* Only show the deployment progress if deployment is in progress */}
           {loading && deployStatus !== "done" && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
               <div
                 style={{
                   width: '30px',
@@ -201,7 +196,7 @@ export default function Home() {
                   {deployedUrl}
                 </a>
               </p>
-              {deployStatus === "done" && <p style={{ color: 'green' }}>Deployment Status: Done ✅</p>}
+              <p style={{ color: 'green' }}>Deployment Status: Done ✅</p>
             </div>
           ) : (
             <div>
