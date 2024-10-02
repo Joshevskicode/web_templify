@@ -25,28 +25,30 @@ export async function POST(req: any) {
 
     const uniqueDeploymentName = `${sanitizedTemplate}-deployment-${Date.now()}`;
 
-    // MongoDB URI you want to inject into every deployment
-    const mongoDbUri = process.env.NEXT_PUBLIC_MONGODB_URI || "your-fallback-mongodb-uri"; // Use the environment variable or a fallback URI
+    // Use the secure MONGODB_URI environment variable
+    const mongoDbUri = process.env.MONGODB_URI;
+    if (!mongoDbUri || !/^mongodb(\+srv)?:\/\//.test(mongoDbUri)) {
+      return NextResponse.json({ error: "Invalid or missing 'MONGODB_URI'" }, { status: 500 });
+    }
 
     const deploymentPayload = {
-        name: uniqueDeploymentName,
-        gitSource: {
-          type: "github",
-          repo: repoName,
-          ref: "main",
-          repoId: repoId,
-        },
-        target: "production",
-        projectSettings: {
-          buildCommand: "MONGODB_URI=mongodb+srv://admin:Forsafi4o.@cluster0.1oopa.mongodb.net/ npm run build", // Inject MongoDB URI into the build command
-          outputDirectory: ".next",
-          framework: "nextjs",
-        },
-        env: {
-          MONGODB_URI: mongoDbUri, // Set MongoDB URI for runtime
-        }
-      };
-      
+      name: uniqueDeploymentName,
+      gitSource: {
+        type: "github",
+        repo: repoName,
+        ref: "main",
+        repoId: repoId,
+      },
+      target: "production",
+      projectSettings: {
+        buildCommand: `MONGODB_URI=${encodeURIComponent(mongoDbUri)} npm run build`, // Securely inject MongoDB URI
+        outputDirectory: ".next",
+        framework: "nextjs",
+      },
+      env: {
+        MONGODB_URI: mongoDbUri, // Set MongoDB URI for runtime
+      }
+    };
 
     const response = await fetch(`https://api.vercel.com/v13/deployments`, {
       method: "POST",
