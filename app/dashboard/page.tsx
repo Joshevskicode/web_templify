@@ -1,9 +1,9 @@
-'use client'
+'use client';
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import React from "react";
+import React, { Suspense } from "react";
 
-export default function Dashboard() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
   const url = searchParams.get("url");
@@ -36,5 +36,13 @@ export default function Dashboard() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div>Loading Dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
