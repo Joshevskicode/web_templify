@@ -65,13 +65,14 @@ export default function Home() {
 
         stopTimer(); // Stop the timer when deployment is done
         setLoading(false);
-        break;
+
+        return { status: "done", url: modifiedDeploymentUrl, deploymentId };
       } else if (readyState === "ERROR") {
         setDeployStatus("error");
         stopTimer();
         setLoading(false);
         alert("Deployment failed.");
-        break;
+        return { status: "error" };
       }
 
       attempts++;
@@ -80,33 +81,63 @@ export default function Home() {
 
     if (attempts >= maxAttempts) {
       alert("Deployment is taking longer than expected.");
+      return { status: "timeout" };
     }
+
+    return { status: readyState };
   };
 
   const handleBuyRestaurantTheme = async () => {
     setLoading(true);
     const startTime = Date.now();
-
+  
     try {
       console.log("Sending request to deploy the theme...");
       const response = await fetch("/api/deploy-theme", {
         method: "POST",
         body: JSON.stringify({
-        // Remove user details from the deployment payload
-          username: "anonymous", // Avoid using session user details in the deployment
+          username: "anonymous",
           template: "restaurant_template",
         }),
         headers: {
           "Content-Type": "application/json",
         },
       });
-
+  
       const data = await response.json();
-      console.log("Deployment response:", data);
-
+      console.log("Full Deployment Response:", data); // Log full response
+  
       if (response.ok) {
+        const projectId = data?.project?.id;
         const deploymentId = data.url.split("/").pop(); // Extract deploymentId from URL
-        await pollDeploymentStatus(deploymentId, startTime);
+  
+        console.log("Project ID:", projectId); 
+        console.log("Deployment ID (from URL):", deploymentId);
+  
+        const deploymentResult = await pollDeploymentStatus(deploymentId, startTime);
+  
+        if (deploymentResult.status === "done" && deploymentResult.url && deploymentResult.deploymentId) {
+          const userResponse = await fetch("/api/users", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              acc: "anonymous",
+              pass: "securepassword123",
+              projectId: projectId || deploymentResult.deploymentId,
+              url: deploymentResult.url,
+            }),
+          });
+  
+          const userData = await userResponse.json();
+          if (userResponse.ok) {
+            console.log("User created successfully:", userData);
+          } else {
+            console.error("Failed to create user:", userData.error);
+            alert("User creation failed. Please try again.");
+          }
+        }
       } else {
         console.error("Failed to deploy the restaurant theme:", data);
         alert("Failed to deploy the restaurant theme");
@@ -118,7 +149,7 @@ export default function Home() {
       setLoading(false);
     }
   };
-
+  
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h1>Welcome to WebTemplify!</h1>
