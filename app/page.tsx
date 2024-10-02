@@ -28,16 +28,12 @@ export default function Home() {
 
   // Modify the URL function dynamically
   function modifyUrl(url: string) {
-    // Find the index of the last occurrence of '-' and '.vercel'
     const lastDashIndex = url.lastIndexOf('-');
     const vercelIndex = url.lastIndexOf('.vercel');
-  
-    // If both are found, remove the characters between them
+
     if (lastDashIndex !== -1 && vercelIndex !== -1) {
       return url.slice(0, lastDashIndex) + url.slice(vercelIndex);
     }
-  
-    // Return the original URL if no changes are needed
     return url;
   }
 
@@ -45,7 +41,7 @@ export default function Home() {
   const pollDeploymentStatus = async (deploymentId: string, startTime: number) => {
     let readyState = "building";
     setDeployStatus("building");
-    startTimer(); // Start the timer
+    startTimer();
 
     let attempts = 0;
     const maxAttempts = 15;
@@ -68,12 +64,12 @@ export default function Home() {
         setDeployedUrl(modifiedDeploymentUrl);
 
         stopTimer(); // Stop the timer when deployment is done
-        setLoading(false); // Set loading to false
+        setLoading(false);
         break;
       } else if (readyState === "ERROR") {
         setDeployStatus("error");
         stopTimer();
-        setLoading(false); // Set loading to false
+        setLoading(false);
         alert("Deployment failed.");
         break;
       }
@@ -87,29 +83,29 @@ export default function Home() {
     }
   };
 
-  // Enhanced logging on handleBuyRestaurantTheme
   const handleBuyRestaurantTheme = async () => {
     setLoading(true);
     const startTime = Date.now();
-  
+
     try {
       console.log("Sending request to deploy the theme...");
       const response = await fetch("/api/deploy-theme", {
         method: "POST",
         body: JSON.stringify({
-          username: session?.user?.name || "anonymous", // Username or fallback
-          template: "restaurant_template", // Only the restaurant template
+        // Remove user details from the deployment payload
+          username: "anonymous", // Avoid using session user details in the deployment
+          template: "restaurant_template",
         }),
         headers: {
           "Content-Type": "application/json",
         },
       });
-  
+
       const data = await response.json();
       console.log("Deployment response:", data);
-  
+
       if (response.ok) {
-        const deploymentId = data.url.split("/").pop();
+        const deploymentId = data.url.split("/").pop(); // Extract deploymentId from URL
         await pollDeploymentStatus(deploymentId, startTime);
       } else {
         console.error("Failed to deploy the restaurant theme:", data);
@@ -122,7 +118,6 @@ export default function Home() {
       setLoading(false);
     }
   };
-  
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
@@ -200,5 +195,5 @@ export default function Home() {
         </div>
       )}
     </div>
-  ); 
+  );
 }

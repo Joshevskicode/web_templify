@@ -16,14 +16,9 @@ export async function POST(req: any) {
   console.log("Vercel Token:", vercelToken); // Log the token to check if it's available
 
   try {
-    const { username, template } = await req.json(); // Get the template and username from the request
+    const { template } = await req.json(); // Get the template from the request
 
     // Validate the request payload
-    if (!username || typeof username !== 'string') {
-      console.error("Invalid or missing 'username'");
-      return NextResponse.json({ error: "Invalid or missing 'username'" }, { status: 400 });
-    }
-
     if (!template || typeof template !== 'string') {
       console.error("Invalid or missing 'template'");
       return NextResponse.json({ error: "Invalid or missing 'template'" }, { status: 400 });
@@ -42,12 +37,11 @@ export async function POST(req: any) {
       repoId = 865908307; // Existing web_templify repoId
     }
 
-    // Sanitize username and template to generate a valid deployment name
-    const sanitizedUsername = sanitizeName(username);
+    // Sanitize the template name only
     const sanitizedTemplate = sanitizeName(template);
 
-    // Generate a unique deployment name using sanitized username and template
-    const uniqueDeploymentName = `${sanitizedTemplate}-deployment-${sanitizedUsername}-${Date.now()}`;
+    // Generate a unique deployment name using only the template and current timestamp
+    const uniqueDeploymentName = `${sanitizedTemplate}-deployment-${Date.now()}`;
 
     const deploymentPayload = {
       name: uniqueDeploymentName, // Use the sanitized unique name for deployment
